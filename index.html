@@ -886,16 +886,16 @@
     <div class="form-row">
       <div class="fgroup">
         <label>Nombre Completo</label>
-        <input type="text" placeholder="Ej. Juan García López">
+        <input type="text" id="contact-name" placeholder="Ej. Juan García López">
       </div>
       <div class="fgroup">
         <label>Correo Electrónico</label>
-        <input type="email" placeholder="correo@ejemplo.com">
+        <input type="email" id="contact-email" placeholder="correo@ejemplo.com">
       </div>
     </div>
     <div class="fgroup">
       <label>Asunto</label>
-      <select>
+      <select id="contact-subject">
         <option value="" disabled selected>Seleccione un área</option>
         <option>Derecho Civil</option>
         <option>Derecho Empresarial</option>
@@ -907,7 +907,7 @@
     </div>
     <div class="fgroup">
       <label>Mensaje</label>
-      <textarea placeholder="Describa brevemente su situación…"></textarea>
+      <textarea id="contact-message" placeholder="Describa brevemente su situación…"></textarea>
     </div>
     <button class="btn-submit" onclick="handleSubmit(this)">Enviar Mensaje</button>
   </div>
@@ -1035,19 +1035,59 @@
 
   // Form submit
   function handleSubmit(btn) {
+    const name = document.getElementById('contact-name').value;
+    const email = document.getElementById('contact-email').value;
+    const subject = document.getElementById('contact-subject').value;
+    const message = document.getElementById('contact-message').value;
+
+    if (!name || !email || !message) {
+      alert("Por favor complete los campos obligatorios (Nombre, Correo y Mensaje).");
+      return;
+    }
+
     const orig = btn.textContent;
     btn.textContent = 'Enviando…';
     btn.style.opacity = '0.7';
-    setTimeout(() => {
+    btn.disabled = true;
+
+    fetch("https://formsubmit.co/ajax/gerardo.castro.vargas@uabc.edu.mx", {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        _subject: "Consulta de " + name + " | " + (subject || "General"),
+        Nombre: name,
+        Email: email,
+        Asunto: subject || "No especificado",
+        Mensaje: message
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
       btn.textContent = '✓ Mensaje Enviado';
       btn.style.background = '#4CAF50';
       btn.style.opacity = '1';
+      document.getElementById('contact-name').value = '';
+      document.getElementById('contact-email').value = '';
+      document.getElementById('contact-subject').value = '';
+      document.getElementById('contact-message').value = '';
+      
       setTimeout(() => {
         btn.textContent = orig;
         btn.style.background = '';
         btn.style.opacity = '';
+        btn.disabled = false;
       }, 3000);
-    }, 1400);
+    })
+    .catch(error => {
+      btn.textContent = 'Error al enviar';
+      btn.style.background = '#d9534f';
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.style.background = '';
+        btn.style.opacity = '';
+        btn.disabled = false;
+      }, 3000);
+    });
   }
 
   // Smooth active nav link
